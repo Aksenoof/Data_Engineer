@@ -62,19 +62,19 @@ ON e.department_id = d.id
 WHERE level = 'jun'
 GROUP BY d.name, d.id),
 
-middle AS (SELECT d.id, COUNT(*) AS middle FROM employees e 
+middle AS (SELECT d.id, COUNT(level) AS middle FROM employees e 
 JOIN departments d
 ON e.department_id = d.id
 WHERE level = 'middle'
 GROUP BY d.name, d.id),
 
-senior AS (SELECT d.id, COUNT(*) AS senior FROM employees e 
+senior AS (SELECT d.id, COUNT(level) AS senior FROM employees e 
 JOIN departments d
 ON e.department_id = d.id
 WHERE level = 'senior'
 GROUP BY d.name, d.id),
 
-lead AS (SELECT d.id, COUNT(*) AS lead FROM employees e 
+lead AS (SELECT d.id, COUNT(level) AS lead FROM employees e 
 JOIN departments d
 ON e.department_id = d.id
 WHERE level = 'lead'
