@@ -41,6 +41,20 @@ WHERE bonus = (SELECT MAX(bonus)
                );
 
 -- индексация зарплат сотрудников с учетом коэффициента премии
+SELECT id, fullname, salary, bonus AS bonus_coef, 
+salary * bonus AS bonus, 
+SUM(salary * b) AS index_bonus, 
+SUM(salary * b) + salary AS index_salary,
+SUM(salary * b) + salary + (salary * bonus) AS total_salary
+FROM (SELECT *, CASE WHEN bonus > 1.2 THEN 0.2
+					 WHEN (1 < bonus AND bonus <= 1.2)  THEN 0.1
+			    else 0 END AS b
+      FROM employees e
+      ) AS b_y 
+GROUP BY id, fullname, salary, bonus
+ORDER BY id
+
+-- отчет
 WITH 
 jun AS (SELECT d.id,COUNT(level) AS jun FROM employees e 
 JOIN departments d
@@ -67,8 +81,8 @@ WHERE level = 'lead'
 GROUP BY d.name, d.id),
 
 sum_index_salary  AS (SELECT department_id AS id, SUM(((salary * b) + salary)) AS sum_index_salary
-FROM (SELECT *, CASE WHEN bonus >= 1.2 THEN 0.2
-					 WHEN (1 < bonus AND bonus < 1.2)  THEN 0.1
+FROM (SELECT *, CASE WHEN bonus > 1.2 THEN 0.2
+					 WHEN (1 < bonus AND bonus <= 1.2)  THEN 0.1
 			    else 0 END AS b
       FROM employees e
       ) AS b_y 
@@ -156,7 +170,8 @@ SELECT name AS department, manager, number_employees, AVG(AGE(CURRENT_DATE, star
 ROUND(AVG(salary),2) AS salary_mean, COALESCE(NULLIF(jun, null), 0) AS jun, COALESCE(NULLIF(middle, null), 0) AS middle,
 COALESCE(NULLIF(senior, null), 0) AS senior, COALESCE(NULLIF(lead, null), 0) AS  lead, SUM(salary) AS  sum_salary, 
 sum_index_salary, grade_A, grade_B, grade_C, grade_D, grade_E, ROUND(AVG(bonus),2) AS bonus_coef_mean, sum_bonus, total_salary, 
-sum_index_salary + sum_bonus AS total_salary_index
+sum_index_salary + sum_bonus AS total_salary_index, 
+ROUND(((((sum_index_salary + sum_bonus) - total_salary)/total_salary)*100), 2) AS difference
 FROM employees e 
 LEFT JOIN departments d ON e.department_id = d.id
 LEFT JOIN jun j ON e.department_id = j.id
@@ -172,5 +187,5 @@ LEFT JOIN grade_E g_E ON e.department_id = g_E.department_id
 LEFT JOIN sum_bonus s_b ON e.department_id = s_b.department_id
 LEFT JOIN total_salary t_s ON e.department_id = t_s.department_id
 GROUP BY department, manager, number_employees, jun, middle, senior, lead, sum_index_salary, grade_A, grade_B, grade_C,
-grade_D, grade_E, sum_bonus, total_salary
+grade_D, grade_E, sum_bonus, total_salary, difference
 ORDER BY department
