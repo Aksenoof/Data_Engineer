@@ -1,6 +1,12 @@
 CREATE TYPE level_type AS ENUM ('jun', 'middle', 'senior', 'lead');
 CREATE TYPE grade_type AS ENUM ('A', 'B', 'C', 'D', 'E');
 
+CREATE TABLE IF NOT EXISTS departments(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	name VARCHAR(50) NOT NULL,
+	manager VARCHAR(50),
+	number_employees SMALLINT)
+
 CREATE TABLE IF NOT EXISTS employees(
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	fullname VARCHAR(50) NOT NULL,
@@ -15,12 +21,6 @@ CREATE TABLE IF NOT EXISTS employees(
         FOREIGN KEY (department_id)
         REFERENCES departments(id)
         ON DELETE CASCADE)
-
-CREATE TABLE IF NOT EXISTS departments(
-	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	name VARCHAR(50) NOT NULL,
-	manager VARCHAR(50),
-	number_employees SMALLINT)
 
 CREATE TABLE IF NOT EXISTS scores(
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -112,7 +112,7 @@ WHERE driver_license=true;
 -- id сотрудников, которые хотя бы за 1 квартал получили оценку D или E
 SELECT employee_id 
 FROM scores s 
-WHERE (grade='D' OR grade='E');
+WHERE (q1='D' OR q1='E');
 
 --масксимальная зарплата в компании
 SELECT MAX(salary) 
@@ -131,10 +131,10 @@ WHERE number_employees=(SELECT MAX(number_employees)
 -- номера сотрудников от самых опытных до вновь прибывших
 SELECT id, level 
 FROM employees e
-ORDER BY CASE WHEN level = 'lead' THEN 1
-			WHEN level = 'senior' THEN 2
-			WHEN level = 'middle' THEN 3
-			WHEN level = 'jun' THEN 4
+ORDER BY CASE level WHEN 'lead' THEN 1
+			WHEN 'senior' THEN 2
+			WHEN 'middle' THEN 3
+			WHEN 'jun' THEN 4
 			END;
 
 -- средняя зарплата для каждого уровня сотрудников
@@ -148,29 +148,29 @@ ALTER TABLE employees ADD COLUMN bonus NUMERIC
 
 UPDATE employees e
 SET bonus = (SELECT 1 + quarter1 + quarter2 + quarter3 + quarter4 AS bonus_year 
-			FROM (SELECT s.*, CASE WHEN q1 = 'A' THEN 0.2
-								WHEN q1 = 'B' THEN 0.1
-								WHEN q1 = 'C' THEN 0
-								WHEN q1 = 'D' THEN -0.1
-								WHEN q1 = 'E' THEN -0.2
+			FROM (SELECT s.*, CASE q1 WHEN 'A' THEN 0.2
+								WHEN 'B' THEN 0.1
+								WHEN 'C' THEN 0
+								WHEN 'D' THEN -0.1
+								WHEN 'E' THEN -0.2
 								else 1 END AS quarter1,
-							  CASE WHEN q2 = 'A' THEN 0.2
-								WHEN q2 = 'B' THEN 0.1
-								WHEN q2 = 'C' THEN 0
-								WHEN q2 = 'D' THEN -0.1
-								WHEN q2 = 'E' THEN -0.2
+							  CASE q2 WHEN 'A' THEN 0.2
+								WHEN 'B' THEN 0.1
+								WHEN 'C' THEN 0
+								WHEN 'D' THEN -0.1
+								WHEN 'E' THEN -0.2
 								else 1 END AS quarter2,
-							  CASE WHEN q3 = 'A' THEN 0.2
-								WHEN q3 = 'B' THEN 0.1
-								WHEN q3 = 'C' THEN 0
-								WHEN q3 = 'D' THEN -0.1
-								WHEN q3 = 'E' THEN -0.2
+							  CASE q3 WHEN 'A' THEN 0.2
+								WHEN 'B' THEN 0.1
+								WHEN 'C' THEN 0
+								WHEN 'D' THEN -0.1
+								WHEN 'E' THEN -0.2
 								else 1 END AS quarter3,
-							   CASE WHEN q4 = 'A' THEN 0.2
-								WHEN q4 = 'B' THEN 0.1
-								WHEN q4 = 'C' THEN 0
-							    WHEN q4 = 'D' THEN -0.1
-								WHEN q4 = 'E' THEN -0.2
+							   CASE q4 WHEN 'A' THEN 0.2
+								WHEN 'B' THEN 0.1
+								WHEN 'C' THEN 0
+							    WHEN 'D' THEN -0.1
+								WHEN 'E' THEN -0.2
 								else 1 END AS quarter4 
 				FROM scores s) AS b_q
 			WHERE e.id = b_q.id								
