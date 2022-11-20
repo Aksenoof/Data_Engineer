@@ -112,7 +112,11 @@ WHERE driver_license=true;
 -- id сотрудников, которые хотя бы за 1 квартал получили оценку D или E
 SELECT employee_id 
 FROM scores s 
-WHERE (q1='D' OR q1='E');
+WHERE (q1='D' OR q1='E' OR 
+	   q2='D' OR q2='E' OR
+	   q3='D' OR q3='E' OR
+	   q4='D' OR q4='E'
+	   );
 
 --масксимальная зарплата в компании
 SELECT MAX(salary) 
@@ -128,7 +132,7 @@ FROM departments d
 WHERE number_employees=(SELECT MAX(number_employees) 
 						FROM departments d);
 
--- номера сотрудников от самых опытных до вновь прибывших
+-- номера сотрудников по уровню
 SELECT id, level 
 FROM employees e
 ORDER BY CASE level WHEN 'lead' THEN 1
@@ -136,6 +140,10 @@ ORDER BY CASE level WHEN 'lead' THEN 1
 			WHEN 'middle' THEN 3
 			WHEN 'jun' THEN 4
 			END;
+
+-- номера сотрудников от самых опытных до вновь прибывших
+SELECT id FROM employees e 
+ORDER BY AGE(CURRENT_DATE, start_date) DESC;
 
 -- средняя зарплата для каждого уровня сотрудников
 SELECT level, ROUND(AVG(salary),2) AS mean 
